@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.server.path": "/nix/store/13irk3d1x0qihfhz2c1jv3d170p9sbnc-rust-analyzer-2025-08-25/bin/rust-analyzer",
+    "nixEnvSelector.suggestion": false,
+    "nixEnvSelector.nixFile": "${workspaceFolder}/shell.nix",
+}
