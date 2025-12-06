@@ -1,35 +1,70 @@
-use std::{fs::read_to_string, path::PathBuf};
+use std::{env::var, fs::read_to_string};
 
 fn main() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let path = root.join("input").join("input");
-
-    let mut count = 0;
-    let mut rot: i16 = 50;
-    for line in read_to_string(path).unwrap().lines() {
-        let num = split_line_to_num(line);
-        let res = (rot+num).rem_euclid(100);
-        println!("Calculating {}+({})={}, from {}", rot, num, res, line);
-        if part_two(&num, &res, &rot) { count+=1; };
-        rot = res;
+    let root = match var("CARGO_MANIFEST_DIR") {
+        Ok(it) => it,
+        Err(_) => String::from(".."),
     };
 
-    println!("The Password is {}", count);
+    let path = format!("{}/resources/input", root);
+    let body = match read_to_string(&path) {
+        Ok(it) => it,
+        Err(_) => {
+            println!(
+                "Failed to find input file at {}, falling back to test data",
+                &path
+            );
+            String::from("L13")
+        }
+    };
+
+    let mut click_counter: i32 = 0;
+    let mut cur_rotation: i32 = 50;
+
+    for line in body.lines() {
+        let (mut rotation, minus) = extract_line(line);
+        click_counter += rotation / 100;
+        rotation %= 100;
+
+        let new_rotation = if minus {
+            cur_rotation - rotation
+        } else {
+            cur_rotation + rotation
+        };
+
+        let corrected_pos = if minus {
+            if new_rotation >= 0 {
+                new_rotation
+            } else {
+                if cur_rotation > 0 {
+                    click_counter += 1;
+                };
+                100 + new_rotation
+            }
+        } else {
+            match new_rotation {
+                x if x <= 99 => new_rotation,
+                x if x > 100 => {
+                    click_counter += 1;
+                    new_rotation - 100
+                }
+                100 => 0,
+                _ => panic!(),
+            }
+        };
+        cur_rotation = corrected_pos;
+
+        if cur_rotation == 0 {
+            click_counter += 1;
+        }
+    }
+
+    println!("The Password is {}", click_counter);
 }
 
-fn split_line_to_num(line: &str) -> i16 {
+fn extract_line(line: &str) -> (i32, bool) {
     let mut chars = line.chars();
     let prefix = chars.next().expect("String empty.");
     let len = prefix.len_utf8();
-    let minus = prefix == 'L';
-    let rest = &line[len..].parse::<i16>().unwrap();
-    if minus { -1*rest } else { *rest }
-}
-
-fn part_one(res: &i16) -> bool {
-    *res == 0
-}
-
-fn part_two(num: &i16, res: &i16, rot: &i16 ) -> bool {
-    (rot+num >= 100) || (0 >= rot+num)
+    (line[len..].parse::<i32>().unwrap(), prefix == 'L')
 }
