@@ -1,22 +1,6 @@
-use std::{env::var, fs::read_to_string};
 
 fn main() {
-    let root = match var("CARGO_MANIFEST_DIR") {
-        Ok(it) => it,
-        Err(_) => String::from(".."),
-    };
-
-    let path = format!("{}/resources/input", root);
-    let body = match read_to_string(&path) {
-        Ok(it) => it,
-        Err(_) => {
-            println!(
-                "Failed to find input file at {}, falling back to test data",
-                &path
-            );
-            String::from("L13")
-        }
-    };
+    let body = shared::load_input().expect("Input File not found");
 
     let mut click_counter: i32 = 0;
     let mut cur_rotation: i32 = 50;
